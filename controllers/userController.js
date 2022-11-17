@@ -74,13 +74,13 @@ class UserController {
         const token = jwt.sign({ userID: user._id }, secret, { expiresIn: '15m' })
         const link = `http://127.0.0.1:3000/api/user/reset/${user._id}/${token}`
         console.log(link)
-        // // Send Email
-        // let info = await transporter.sendMail({
-        //   from: process.env.EMAIL_FROM,
-        //   to: user.email,
-        //   subject: "GeekShop - Password Reset Link",
-        //   html: `<a href=${link}>Click Here</a> to Reset Your Password`
-        // })
+        // Send Email
+        let info = await transporter.sendMail({
+          from: process.env.EMAIL_FROM,
+          to: user.email,
+          subject: "brlASSI - Password Reset Link",
+          html: `<a href=${link}>Click Here</a> to Reset Your Password`
+        })
         res.send({ "status": "success", "message": "Password Reset Email Sent... Please Check Your Email" })
       } else {
         res.send({ "status": "failed", "message": "Email doesn't exists" })
@@ -177,13 +177,13 @@ class UserController {
     };
     static delete_user = async (req, res) => {
       try {
-        const admin = await User.findOne({ _id: req.userId });
-        const user = await User.findOne({ email: req.params.email });
+        const admin = await user.findOne({ _id: req.userId });
+        const user = await user.findOne({ email: req.params.email });
         if (user) {
           console.log(user);
           if (admin.role === "admin") {
             console.log(
-              await User.deleteOne({ email: req.params.email }),
+              await user.deleteOne({ email: req.params.email }),
               "\n user deleted"
             );
             res.render("success", { message: "User Deleted" });
