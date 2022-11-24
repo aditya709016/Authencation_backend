@@ -65,28 +65,37 @@ class UserController {
     }
   }
 
-  static userReset = async (req, res) => {
-    const { email } = req.body
-    if (email) {
-      const user = await UserModel.findOne({ email: email })
-      if (user) {
-        const secret = user._id + process.env.JWT_SECRET_KEY
-        const token = jwt.sign({ userID: user._id }, secret, { expiresIn: '15m' })
-        const link = `http://127.0.0.1:3000/api/user/reset/${user._id}/${token}`
-        console.log(link)
-        // Send Email
-        let info = await transporter.sendMail({
-          from: process.env.EMAIL_FROM,
-          to: user.email,
-          subject: "brlASSI - Password Reset Link",
-          html: `<a href=${link}>Click Here</a> to Reset Your Password`
-        })
-        res.send({ "status": "success", "message": "Password Reset Email Sent... Please Check Your Email" })
-      } else {
-        res.send({ "status": "failed", "message": "Email doesn't exists" })
-      }
-    } else {
-      res.send({ "status": "failed", "message": "Email Field is Required" })
+  static userReset = async(req,res)=>{
+    try {
+        const useremail=req.body.uemail;
+        if(useremail){
+            const finduser=await Register.findOne({email:useremail});
+
+            if(finduser){
+                const resettoken=await finduser.generateresetToken();
+                const link=`http://localhost:3000/password/reset/${finduser._id}/${resettoken}`;
+                console.log(link);
+
+                let info=await transpoter.sendMail({
+                    from:process.env.EMAIL_FROM,
+                    to:finduser.email,
+                    subject:"password reset link",
+                    html:`<a href=${link}>click here </a>`,
+
+                })
+                res.send("email has been sent");
+
+
+            }else{
+                res.send("Email Doest Not Exist");
+            }
+        }else{
+            res.status(400).send("Invalid Email");
+        }
+        
+    } catch (e) {
+        res.status(400).send(e);
+        
     }
   }
 
@@ -111,7 +120,7 @@ class UserController {
       }
     } catch (error) {
       console.log(error)
-      res.send({ "status": "failed", "message": "Invalid Token" })
+      res.send({ "status": "failed", "message": "Passwword not reset" })
     }
   }
   static change_nickname = async (req, res) => {
@@ -120,9 +129,9 @@ class UserController {
         await User.updateOne({ email: req.userEmail }, { nickname: new_nickname })
       );
       res.redirect("/user/nickname");
-      // res.status(201).json({
-      //   message: `Nickname updated to ${new_nickname}`,
-      // });
+      res.status(201).json({
+        message: `Nickname updated to ${new_nickname}`,
+      });
     };
     static makeAdmin = async (req, res) => {
       res.redirect(`/admin/make_admin/${req.query.email}`);
@@ -146,34 +155,12 @@ class UserController {
       }
     }
     static get_nickname = async (req, res) => {
-      try {
-        const user = await User.findOne({ _id: req.userId });
-        if (user) {
-          console.log("Nickname:", user.nickname);
-          res.render("profile", {
-            name: user.nickname,
-            email: user.email,
-            role: user.role,
-          });
-          
-        } else {
-          console.log("Error finding user");
-          res.render("error", {
-            message_1: "SORRY",
-            message_2: "Error finding user",
-            brace: "(",
-          });
-          
-        }
-      } catch (err) {
-        console.log(err);
-        res.render("error", {
-          message_1: "OOPS!",
-          message_2: "Something went wrong",
-          brace: "(",
-        });
-        
-      }
+      const bandaemail=req.body.uemail;
+    const displaynickname=await Register.findOne({email:bandaemail});
+    const username=displaynickname.nickname;
+     res.render("nickname",{
+        nicknameofperson:username
+     });
     };
     static delete_user = async (req, res) => {
       try {
@@ -200,16 +187,14 @@ class UserController {
           }
         }
       } catch (err) {
-        console.log(err);
-        res.render("error", {
-          message_1: "OOPS!",
-          message_2: "Something went wrong",
-          brace: "(",
-        });
+        console.log(error)
+            res.send
+            ({ "status": "failed", "message": "Unable to Login" })
+        };
         
       }
     }
     
-}
+
 
 export default UserController
