@@ -21,6 +21,6 @@ app.use(express.json())
 // Load Routes
 app.use("/", userRoutes)
 
-app.listen(port, () => {
+app.listen(process.env.PORT || 3000, function(){
   console.log(`Server listening at http://localhost:${port}`)
 })
